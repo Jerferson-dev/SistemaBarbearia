@@ -1,26 +1,37 @@
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
 
 public class Agendamento {
 
-    // Atributos
+    private UUID id;
+
     private Cliente cliente;
     private Profissional profissional;
     private Servico servico;
-
-    // O localDataTime guarda data e hora juntos (ex: 2026-01-02T14:30:00)
     private LocalDateTime dataHora;
 
-    private StatusAgendamento status;
-    private MetodoPagamento pagamento;
 
-    public Agendamento(Cliente cliente, Profissional profissional, Servico servico, LocalDateTime datahora) {
+    public Agendamento(Cliente cliente, Profissional profissional, Servico servico, LocalDateTime dataHora) {
+
+        this.id = UUID.randomUUID();
         this.cliente = cliente;
         this.profissional = profissional;
         this.servico = servico;
-        this.dataHora = datahora;
-
+        this.dataHora = dataHora;
     }
 
+    public Agendamento(UUID id, Cliente cliente, Profissional profissional, Servico servico, LocalDateTime dataHora) {
+        this.id = id; // Usa o ID que veio do arquivo
+        this.cliente = cliente;
+        this.profissional = profissional;
+        this.servico = servico;
+        this.dataHora = dataHora;
+    }
+
+    public UUID getId() {
+        return id;
+    }
 
     public Cliente getCliente() {
         return cliente;
@@ -54,32 +65,17 @@ public class Agendamento {
         this.dataHora = dataHora;
     }
 
-    public StatusAgendamento getStatus() {
-        return status;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Agendamento that = (Agendamento) o;
+        return Objects.equals(id, that.id);
     }
 
-    public void setStatus(StatusAgendamento status) {
-        this.status = status;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
-    public MetodoPagamento getPagamento() {
-        return pagamento;
-    }
-
-    public void setPagamento(MetodoPagamento pagamento) {
-        this.pagamento = pagamento;
-    }
-
-    //método para verificar quando o atendimento acaba
-    public LocalDateTime calcularHorarioTermino(){
-        // pega a hora do agendamento e soma a duração do serviço
-        return this.dataHora.plusMinutes(servico.getDuracaoEmMinutos());
-    }
-
-    // confirmar pagamento
-    public void realizarPagamento(MetodoPagamento metodo){
-        this.pagamento = metodo;
-        System.out.println("Pagamento resgistrado via " + metodo);
-
-    }
 }
