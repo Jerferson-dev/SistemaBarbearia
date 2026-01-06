@@ -14,6 +14,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.DayOfWeek;
+
 
 public class Agenda {
 
@@ -23,16 +27,25 @@ public class Agenda {
         this.agendamentos = new ArrayList<>();
     }
 
+
     public boolean agendar(Cliente cliente, Profissional profissional, Servico servico, LocalDateTime dataHora) {
         // Passei null no ID para ignorar, pois é um agendamento novo (ninguém para ignorar)
-        if (verificarDisponibilidade(dataHora, null)) {
+
+        if (dataHora.getDayOfWeek() == DayOfWeek.SUNDAY.MONDAY) {
+            System.out.println("🚫 Erro: A barbearia não abre aos Domingos e Segundas! Escolha outro dia.");
+
+            return false;
+        }else
+
+         if (verificarDisponibilidade(dataHora, null)) {
             Agendamento novo = new Agendamento(cliente, profissional, servico, dataHora);
             agendamentos.add(novo);
             System.out.println("✅ Agendamento realizado com sucesso!");
-            return true;
-        }
-        System.out.println("❌ Horário ocupado.");
-        return false;
+             salvarDados();
+             return true;
+         }
+         System.out.println("❌ Horário ocupado.");
+         return false;
     }
 
     public boolean remarcarAgendamento(Agendamento agendamentoAntigo, LocalDateTime novoHorario) {
@@ -51,6 +64,7 @@ public class Agenda {
             agendamentos.add(novoAgendamento);
 
             System.out.println("🔄 Reagendado com sucesso para: " + novoHorario);
+            salvarDados();
             return true;
         } else {
             System.out.println("❌ Não foi possível reagendar. O horário " + novoHorario + " já está ocupado.");
@@ -100,6 +114,7 @@ public class Agenda {
         boolean removeu = agendamentos.removeIf(a -> a.getId().equals(idParaCancelar));
         if (removeu) {
             System.out.println("🗑️ Agendamento cancelado (removido) com sucesso.");
+            salvarDados();
             return true;
         } else {
             System.out.println("❌ Agendamento não encontrado para cancelar.");
@@ -115,11 +130,11 @@ public class Agenda {
             StringBuilder conteudo = new StringBuilder();
 
             for (Agendamento a : agendamentos) {
-                conteudo.append(a.getId()).append(";")
-                        .append(a.getCliente().getName()).append(";")
-                        .append(a.getProfissional().getNome()).append(";")
-                        .append(a.getServico().getName()).append(";")
-                        .append(a.getServico().getValor()).append(";") // <--- SALVA O VALOR AQUI
+                conteudo.append(a.getId()).append(" - ")
+                        .append(a.getCliente().getName()).append(" - ")
+                        .append(a.getProfissional().getNome()).append(" - ")
+                        .append(a.getServico().getName()).append(" - ")
+                        .append(a.getServico().getValor()).append(" - ")
                         .append(a.getDataHora())
                         .append(System.lineSeparator());
             }
@@ -166,7 +181,7 @@ public class Agenda {
             return;
         }
         agendamentos.sort(Comparator.comparing(Agendamento::getDataHora));
-        DateTimeFormatter fmtMes = DateTimeFormatter.ofPattern("MMMM 'de' yyyy", new Locale("pt", "BR"));
+        DateTimeFormatter fmtMes = DateTimeFormatter.ofPattern("yyyy 'de' MMMM", new Locale("pt", "BR"));
         DateTimeFormatter fmtDia = DateTimeFormatter.ofPattern("dd/MM (EEEE)", new Locale("pt", "BR"));
         DateTimeFormatter fmtHora = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -175,7 +190,7 @@ public class Agenda {
         String ultimoMes = "";
         String ultimoDia = "";
 
-        System.out.println("=== 📅 AGENDA COM VALORES ===");
+        System.out.println("=== 📅 AGENDAMENTOS ===");
 
         for (Agendamento a : agendamentos) {
             String mesAtual = a.getDataHora().format(fmtMes).toUpperCase();
@@ -203,8 +218,47 @@ public class Agenda {
                     " (" + a.getServico().getName() + " - " + valorFormatado + ")");
         }
         System.out.println("============================");
+
     }
 
+    public void mostrarHorariosDisponiveis(LocalDate data) {
+        System.out.println("=== 🕰️ DISPONIBILIDADE PARA ===" +
+                data.format(java.time.format.DateTimeFormatter.ofPattern("dd MM yy")) + " ===");
+
+        if (data.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            System.out.println("🚫 A barbearia está fechada aos Domingos!");
+            System.out.println("======================================");
+            return; // Sai do método imediatamente
+        }
+
+        LocalTime horarioAtual = LocalTime.of(8, 0);
+        LocalTime horarioFechamento = LocalTime.of(19, 0);
+
+        boolean encontrouAlgumLivre = false;
+
+        while (!horarioAtual.isAfter(horarioFechamento)) {
+
+            LocalDateTime dataHoraCheck = data.atTime(horarioAtual);
+
+            if (dataHoraCheck.isBefore(LocalDateTime.now())) {
+                horarioAtual = horarioAtual.plusMinutes(30);
+                continue;
+            }
+
+            boolean isLivre = verificarDisponibilidade(dataHoraCheck, null);
+
+            if (isLivre) {
+                System.out.println("✅ " + horarioAtual + " - Livre");
+                encontrouAlgumLivre = true;
+            }
+
+            horarioAtual = horarioAtual.plusMinutes(30);
+        }
+        if (!encontrouAlgumLivre) {
+            System.out.println("😔 Nenhum horário vago para este dia (ou o dia já acabou).");
+        }
+        System.out.println("======================================");
+    }
     public void gerarRelatorioFinanceiro() {
         if (agendamentos.isEmpty()) {
             System.out.println("📭 Nenhum dado para calcular.");
@@ -236,7 +290,7 @@ public class Agenda {
             totalGeral = totalGeral.add(totalMes);
         }
         System.out.println("--------------------------------------");
-        System.out.println("🏆 TOTAL ARRECADADO NA HISTÓRIA: " + fmtDinheiro.format(totalGeral));
+        System.out.println("🏆 TOTAL ARRECADADO ATÉ AGORA : " + fmtDinheiro.format(totalGeral));
         System.out.println("======================================");
     }
 }

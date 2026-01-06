@@ -1,15 +1,19 @@
+import org.w3c.dom.ls.LSOutput;
+
+import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
+
 public class MenuPrincipal {
 
     private Agenda agenda;
     private Scanner scanner;
 
-    private DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd MM yy HH:mm");
 
     public MenuPrincipal() {
         this.agenda = new Agenda();
@@ -40,6 +44,12 @@ public class MenuPrincipal {
                 case "5":
                     agenda.gerarRelatorioFinanceiro();
                     break;
+                case "6":
+                    LocalDate dia = lerData("Qual dia você quer consultar? (dd MM yy): ");
+                    if (dia != null) {
+                        agenda.mostrarHorariosDisponiveis(dia);
+                    }
+                    break;
                 case "0":
                     agenda.salvarDados();
                     System.out.println("Saindo... Até logo!");
@@ -52,6 +62,7 @@ public class MenuPrincipal {
         }
     }
 
+
     private void exibirOpcoes() {
         System.out.println("=== ✂️ BARBEARIA CORTE CHIC ✂️ ===");
         System.out.println("1. Novo Agendamento");
@@ -59,8 +70,10 @@ public class MenuPrincipal {
         System.out.println("3. Remarcar Horário");
         System.out.println("4. Cancelar Agendamento");
         System.out.println("5. Relatório Financeiro 💰");
+        System.out.println("6. Ver Horários Livres 🕰️");
         System.out.println("0. Salvar e Sair");
         System.out.print("👉 Escolha uma opção: ");
+
     }
 
     private void uiAgendar() {
@@ -68,8 +81,7 @@ public class MenuPrincipal {
         System.out.print("Nome do Cliente: ");
         String nomeCliente = scanner.nextLine();
 
-        System.out.print("Nome do Profissional: ");
-        String nomeProfissional = scanner.nextLine();
+        String nomeProfissional = "Marcos";
 
         System.out.print("Serviço (ex: Corte, Barba): ");
         String nomeServico = scanner.nextLine();
@@ -79,7 +91,7 @@ public class MenuPrincipal {
 
         BigDecimal valorServico = new BigDecimal(valorTexto.replace(",", "."));
 
-        LocalDateTime dataHora = lerDataHora("Data e Hora (dd/MM/yyyy HH:mm): ");
+        LocalDateTime dataHora = lerDataHora("Data e Hora (dd MM yy HH:mm): ");
 
         if (dataHora != null) {
             Cliente c = new Cliente(nomeCliente);
@@ -94,7 +106,7 @@ public class MenuPrincipal {
     private void uiRemarcar() {
         System.out.println("\n--- REMARCAR ---");
 
-        LocalDateTime dataAtual = lerDataHora("Digite a data/hora do agendamento ATUAL (dd/MM/yyyy HH:mm): ");
+        LocalDateTime dataAtual = lerDataHora("Digite a data/hora do agendamento ATUAL (dd MM yy HH:mm): ");
 
         if (dataAtual != null) {
             Agendamento agendamento = agenda.buscarPorHorario(dataAtual);
@@ -102,7 +114,7 @@ public class MenuPrincipal {
             if (agendamento != null) {
                 System.out.println("Agendamento encontrado para: " + agendamento.getCliente().getName());
 
-                LocalDateTime novaData = lerDataHora("Digite o NOVO horário desejado: ");
+                LocalDateTime novaData = lerDataHora("Digite o NOVO horário desejado (dd MM yy HH:mm): ");
                 if (novaData != null) {
                     agenda.remarcarAgendamento(agendamento, novaData);
                 }
@@ -135,10 +147,25 @@ public class MenuPrincipal {
         try {
             return LocalDateTime.parse(entrada, formatador);
         } catch (DateTimeParseException e) {
-            System.out.println("❌ Formato de data inválido! Use algo como: 25/01/2024 14:30");
+            System.out.println("❌ Formato inválido! Use espaços e 2 dígitos pro ano. Ex: 25 01 26 14:30");
             return null;
         }
     }
+    // Método para ler apenas DIA/MÊS/ANO
+    private LocalDate lerData(String mensagem) {
+        System.out.print(mensagem);
+        String entrada = scanner.nextLine();
+        try {
+            // Usa um formatador só de data
+            return LocalDate.parse(entrada, java.time.format.DateTimeFormatter.ofPattern("dd MM yy"));
+        } catch (java.time.format.DateTimeParseException e) {
+            System.out.println("❌ Data inválida! Use: 25 01 26 ");
+            return null;
+        }
+    }
+
+
 }
+
 
 
