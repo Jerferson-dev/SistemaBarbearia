@@ -67,6 +67,7 @@ Caso queira testar no celular:
 
 1. Instale o app [Termux](https://f-droid.org/packages/com.termux/).
 2. Atualize os pacotes e instale o Java (confirme com 'y' se pedir):
+   ## Execute um comando por vez
    ```bash
    pkg update && pkg upgrade
    ```
@@ -77,11 +78,16 @@ Caso queira testar no celular:
    pkg install git
    ```
    
-3. Clone e execute.
+4. Clone e execute.
    ```bash
    git clone https://github.com/Jerferson-dev/SistemaBarbearia.git
+   ```
+   ```bash
    cd SistemaBarbearia
+   ```
+   ```bash
    java Main.java
+   ```
 
 ---
 
@@ -97,8 +103,11 @@ Caso queira testar no celular:
    
 2. Acesse a pasta do projeto e compile:
    ```bash
-   cd barbearia-system
+   cd SistemaBarbearia
+   ```
+   ```bash
    java Main.java
+   ```
 
 
 4. Execute a aplicação:
