@@ -83,7 +83,7 @@ Caso queira testar no celular:
    git clone https://github.com/Jerferson-dev/SistemaBarbearia.git
    ```
    ```bash
-   cd SistemaBarbearia
+   cd SistemaBarbearia/src
    ```
     ```bash
    javac *.java
