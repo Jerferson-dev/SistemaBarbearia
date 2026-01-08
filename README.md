@@ -106,12 +106,11 @@ Caso queira testar no celular:
    
 2. Acesse a pasta do projeto e compile:
    ```bash
-   cd SistemaBarbearia
+   cd SistemaBarbearia/src
    ```
-   ```bash
-   java Main.java
+    ```bash
+   javac *.java
    ```
-
 
 4. Execute a aplicação:
    ```bash
