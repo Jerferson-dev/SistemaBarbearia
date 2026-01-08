@@ -12,6 +12,7 @@ public class Servico {
     }
 
     public Servico(String name) {
+
         this.name = name;
     }
 
@@ -22,22 +23,27 @@ public class Servico {
 
 
     public String getName() {
+
         return name;
     }
 
     public void setName(String name) {
+
         this.name = name;
     }
 
     public BigDecimal getValor() {
+
         return valor;
     }
     @Override
     public String toString(){
+
         return name;
     }
 
     public void setPreco(BigDecimal preco) {
+
         this.valor = preco;
     }
 

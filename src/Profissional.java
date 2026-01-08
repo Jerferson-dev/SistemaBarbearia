@@ -1,6 +1,5 @@
 public class Profissional {
     private String nome;
-    // Futuramente voce pode adicionar uma lista de horarios aqui
 
 
     public Profissional(String nome) {

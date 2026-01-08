@@ -13,7 +13,7 @@ public class MenuPrincipal {
     private Agenda agenda;
     private Scanner scanner;
 
-    private DateTimeFormatter formatador = DateTimeFormatter.ofPattern("dd MM yy HH:mm");
+    private DateTimeFormatter formatador = DateTimeFormatter.ofPattern("d M yy H:mm");
 
     public MenuPrincipal() {
         this.agenda = new Agenda();
@@ -33,22 +33,28 @@ public class MenuPrincipal {
                     uiAgendar();
                     break;
                 case "2":
-                    agenda.listarPorPeriodo();
-                    break;
-                case "3":
-                    uiRemarcar();
-                    break;
-                case "4":
-                    uiCancelar();
-                    break;
-                case "5":
-                    agenda.gerarRelatorioFinanceiro();
-                    break;
-                case "6":
-                    LocalDate dia = lerData("Qual dia você quer consultar? (dd MM yy): ");
+                    LocalDate dia = lerData("Qual dia você quer consultar? (d M yy): ");
                     if (dia != null) {
                         agenda.mostrarHorariosDisponiveis(dia);
                     }
+                    break;
+                case "3":
+                    agenda.listarPorPeriodo();
+                    break;
+                case "4":
+                    uiRemarcar();
+                    break;
+                case "5":
+                    uiCancelar();
+                    break;
+                case "6":
+                    agenda.gerarRelatorioFinanceiro();
+                    break;
+                case "7":
+                    uiRegistrarGasto();
+                    break;
+                case "8":
+                    agenda.listarDespesasDetalhadas();
                     break;
                 case "0":
                     agenda.salvarDados();
@@ -65,12 +71,14 @@ public class MenuPrincipal {
 
     private void exibirOpcoes() {
         System.out.println("=== ✂️ BARBEARIA CORTE CHIC ✂️ ===");
-        System.out.println("1. Novo Agendamento");
-        System.out.println("2. Listar Agendamentos");
-        System.out.println("3. Remarcar Horário");
-        System.out.println("4. Cancelar Agendamento");
-        System.out.println("5. Relatório Financeiro 💰");
-        System.out.println("6. Ver Horários Livres 🕰️");
+        System.out.println("1. Novo Agendamento ✅");
+        System.out.println("2. Ver Horários Livres \uD83D\uDD5B");
+        System.out.println("3. Listar Agendamentos \uD83D\uDCC5");
+        System.out.println("4. Remarcar Horário \uD83D\uDD04");
+        System.out.println("5. Cancelar Agendamento ❌");
+        System.out.println("6. Relatório Financeiro 💰");
+        System.out.println("7. Registrar Gasto (Despesa) 💸");
+        System.out.println("8. Listar Todas as Despesas 📋");
         System.out.println("0. Salvar e Sair");
         System.out.print("👉 Escolha uma opção: ");
 
@@ -91,7 +99,7 @@ public class MenuPrincipal {
 
         BigDecimal valorServico = new BigDecimal(valorTexto.replace(",", "."));
 
-        LocalDateTime dataHora = lerDataHora("Data e Hora (dd MM yy HH:mm): ");
+        LocalDateTime dataHora = lerDataHora("Data e Hora (d M yy H:mm): ");
 
         if (dataHora != null) {
             Cliente c = new Cliente(nomeCliente);
@@ -106,7 +114,7 @@ public class MenuPrincipal {
     private void uiRemarcar() {
         System.out.println("\n--- REMARCAR ---");
 
-        LocalDateTime dataAtual = lerDataHora("Digite a data/hora do agendamento ATUAL (dd MM yy HH:mm): ");
+        LocalDateTime dataAtual = lerDataHora("Digite a data/hora do agendamento ATUAL (d M yy H:mm): ");
 
         if (dataAtual != null) {
             Agendamento agendamento = agenda.buscarPorHorario(dataAtual);
@@ -114,7 +122,7 @@ public class MenuPrincipal {
             if (agendamento != null) {
                 System.out.println("Agendamento encontrado para: " + agendamento.getCliente().getName());
 
-                LocalDateTime novaData = lerDataHora("Digite o NOVO horário desejado (dd MM yy HH:mm): ");
+                LocalDateTime novaData = lerDataHora("Digite o NOVO horário desejado (d M yy H:mm): ");
                 if (novaData != null) {
                     agenda.remarcarAgendamento(agendamento, novaData);
                 }
@@ -126,7 +134,7 @@ public class MenuPrincipal {
 
     private void uiCancelar() {
         System.out.println("\n--- CANCELAR ---");
-        LocalDateTime dataAtual = lerDataHora("Digite a data/hora do agendamento que deseja cancelar: ");
+        LocalDateTime dataAtual = lerDataHora("Digite (d M yy H:mm): ");
 
         if (dataAtual != null) {
             Agendamento agendamento = agenda.buscarPorHorario(dataAtual);
@@ -140,28 +148,46 @@ public class MenuPrincipal {
         }
     }
 
-    // Método para ler data sem quebrar o programa se o usuário errar
+    // método para ler data sem quebrar o programa se o usuário errar
     private LocalDateTime lerDataHora(String mensagem) {
         System.out.print(mensagem);
         String entrada = scanner.nextLine();
         try {
             return LocalDateTime.parse(entrada, formatador);
         } catch (DateTimeParseException e) {
-            System.out.println("❌ Formato inválido! Use espaços e 2 dígitos pro ano. Ex: 25 01 26 14:30");
+            System.out.println("❌ Formato inválido! Tente algo como: 5 1 26 9:30");
             return null;
         }
     }
-    // Método para ler apenas DIA/MÊS/ANO
+    // método para ler apenas DIA/MÊS/ANO
     private LocalDate lerData(String mensagem) {
         System.out.print(mensagem);
         String entrada = scanner.nextLine();
         try {
-            // Usa um formatador só de data
-            return LocalDate.parse(entrada, java.time.format.DateTimeFormatter.ofPattern("dd MM yy"));
+            // usa um formatador só de data
+            return LocalDate.parse(entrada, java.time.format.DateTimeFormatter.ofPattern("d M yy"));
         } catch (java.time.format.DateTimeParseException e) {
-            System.out.println("❌ Data inválida! Use: 25 01 26 ");
+            System.out.println("❌ Data inválida! Tente: 5 1 26 ");
             return null;
         }
+    }
+
+    private void uiRegistrarGasto() {
+        System.out.println("\n--- REGISTRAR DESPESA ---");
+        System.out.print("Descrição: ");
+        String desc = scanner.nextLine();
+
+        System.out.print("Valor (ex: 50.00): ");
+        String valorStr = scanner.nextLine();
+        BigDecimal valor = new BigDecimal(valorStr.replace(",", "."));
+
+        // usei método inteligente de data 10 01 26
+        LocalDate data = lerData("Data da Despesa (d M yy): ");
+
+        if (data != null) {
+            agenda.adicionarGasto(desc, valor, data);
+        }
+
     }
 
 

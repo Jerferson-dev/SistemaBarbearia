@@ -22,20 +22,24 @@ import java.time.DayOfWeek;
 public class Agenda {
 
     public List<Agendamento> agendamentos;
+    public List<Gastos> listaGastos;
 
     public Agenda() {
         this.agendamentos = new ArrayList<>();
+        this.listaGastos = new ArrayList<>();
+
+        carregarGastos();
     }
 
-
     public boolean agendar(Cliente cliente, Profissional profissional, Servico servico, LocalDateTime dataHora) {
-        // Passei null no ID para ignorar, pois é um agendamento novo (ninguém para ignorar)
 
-        if (dataHora.getDayOfWeek() == DayOfWeek.SUNDAY.MONDAY) {
-            System.out.println("🚫 Erro: A barbearia não abre aos Domingos e Segundas! Escolha outro dia.");
-
+        if (dataHora.getDayOfWeek() == DayOfWeek.SUNDAY ) {
+            System.out.println("🚫 Erro: A barbearia não abre aos Domingos! Escolha outro dia.");
             return false;
-        }else
+        } else if (dataHora.getDayOfWeek() == DayOfWeek.MONDAY){
+            System.out.println("🚫 Erro: A barbearia não abre as Segundas! Escolha outro dia.\"");
+            return false;
+        }
 
          if (verificarDisponibilidade(dataHora, null)) {
             Agendamento novo = new Agendamento(cliente, profissional, servico, dataHora);
@@ -97,7 +101,7 @@ public class Agenda {
             System.out.println("Nenhum agendamento.");
         } else {
             for (Agendamento a : agendamentos) {
-                System.out.println(a); // Vai usar aquele toString() bonito que criamos
+                System.out.println(a);
             }
         }
         System.out.println("-----------------------------");
@@ -113,28 +117,29 @@ public class Agenda {
     public boolean cancelarAgendamento(UUID idParaCancelar) {
         boolean removeu = agendamentos.removeIf(a -> a.getId().equals(idParaCancelar));
         if (removeu) {
-            System.out.println("🗑️ Agendamento cancelado (removido) com sucesso.");
+            System.out.println("🗑️ Agendamento cancelado com sucesso.");
             salvarDados();
             return true;
         } else {
-            System.out.println("❌ Agendamento não encontrado para cancelar.");
+            System.out.println("❌ Agendamento não encontrado.");
             return false;
         }
     }
 
     private static final String ARQUIVO_DB = "banco_de_dados.txt";
-    //Pega a lista da memória e escreve no TXT
+
+    //Pega a lista da memória e escreve no banco.de.dados.TXT
     public void salvarDados() {
         try {
             agendamentos.sort(Comparator.comparing(Agendamento::getDataHora));
             StringBuilder conteudo = new StringBuilder();
 
             for (Agendamento a : agendamentos) {
-                conteudo.append(a.getId()).append(" - ")
-                        .append(a.getCliente().getName()).append(" - ")
-                        .append(a.getProfissional().getNome()).append(" - ")
-                        .append(a.getServico().getName()).append(" - ")
-                        .append(a.getServico().getValor()).append(" - ")
+                conteudo.append(a.getId()).append(";")
+                        .append(a.getCliente().getName()).append(";")
+                        .append(a.getProfissional().getNome()).append(";")
+                        .append(a.getServico().getName()).append(";")
+                        .append(a.getServico().getValor()).append(";")
                         .append(a.getDataHora())
                         .append(System.lineSeparator());
             }
@@ -148,30 +153,47 @@ public class Agenda {
             System.err.println("❌ Erro ao salvar: " + e.getMessage());
         }
     }
-    //Lê o TXT e preenche a lista na memória
+
+    //Lê o banco.de.dados.TXT e preenche a lista na memória
     public void carregarDados() {
-        Path caminho = Path.of(ARQUIVO_DB);
-        if (!Files.exists(caminho)) return;
+        Path caminho = Path.of("banco_de_dados.txt");
+        if (!Files.exists(caminho)) {
+            System.out.println("⚠️ Arquivo de banco de dados não encontrado (primeira execução?).");
+            return;
+        }
+
         try {
             List<String> linhas = Files.readAllLines(caminho);
             agendamentos.clear();
-            for (String linha : linhas) {
-                String[] partes = linha.split(";");
 
-                if (partes.length == 6) {
-                    UUID id = UUID.fromString(partes[0]);
-                    Cliente c = new Cliente(partes[1]);
-                    Profissional p = new Profissional(partes[2]);
-                    BigDecimal valor = new BigDecimal(partes[4]);
-                    Servico s = new Servico(partes[3], valor);
-                    LocalDateTime data = LocalDateTime.parse(partes[5]);
-                    Agendamento a = new Agendamento(id, c, p, s, data);
-                    agendamentos.add(a);
+            for (String linha : linhas) {
+                try {
+                    String[] partes = linha.split(";");
+
+                    // após o debug imprime a linha que está tentando ler para você ver se está quebrada
+
+                    if (partes.length >= 6) {
+                        UUID id = UUID.fromString(partes[0]);
+                        Cliente c = new Cliente(partes[1]);
+                        Profissional p = new Profissional(partes[2]);
+                        Servico s = new Servico(partes[3], new BigDecimal(partes[4]));
+                        LocalDateTime data = LocalDateTime.parse(partes[5]);
+
+                        Agendamento a = new Agendamento(id, c, p, s, data);
+
+                        agendamentos.add(a);
+                    } else {
+                        System.out.println("⚠️ Linha ignorada (formato inválido): " + linha);
+                    }
+                } catch (Exception eInterno) {
+                    System.out.println("❌ Erro ao ler linha específica: " + linha);
+                    System.out.println("Motivo: " + eInterno.getMessage());
+                    eInterno.printStackTrace();
                 }
             }
-            System.out.println("📂 Dados carregados.");
+
         } catch (IOException e) {
-            System.err.println("Erro: " + e.getMessage());
+            System.err.println("Erro fatal ao ler arquivo: " + e.getMessage());
         }
     }
 
@@ -208,17 +230,13 @@ public class Agenda {
                 ultimoDia = diaAtual;
             }
 
-
             BigDecimal valor = a.getServico().getValor();
-
             String valorFormatado = (valor != null) ? fmtDinheiro.format(valor) : "R$ 0,00";
-
             System.out.println("      ⏰ " + a.getDataHora().format(fmtHora) +
                     " | " + a.getCliente().getName() +
                     " (" + a.getServico().getName() + " - " + valorFormatado + ")");
         }
         System.out.println("============================");
-
     }
 
     public void mostrarHorariosDisponiveis(LocalDate data) {
@@ -228,30 +246,23 @@ public class Agenda {
         if (data.getDayOfWeek() == DayOfWeek.SUNDAY) {
             System.out.println("🚫 A barbearia está fechada aos Domingos!");
             System.out.println("======================================");
-            return; // Sai do método imediatamente
+            return;
         }
-
         LocalTime horarioAtual = LocalTime.of(8, 0);
         LocalTime horarioFechamento = LocalTime.of(19, 0);
 
         boolean encontrouAlgumLivre = false;
-
         while (!horarioAtual.isAfter(horarioFechamento)) {
-
             LocalDateTime dataHoraCheck = data.atTime(horarioAtual);
-
             if (dataHoraCheck.isBefore(LocalDateTime.now())) {
                 horarioAtual = horarioAtual.plusMinutes(30);
                 continue;
             }
-
             boolean isLivre = verificarDisponibilidade(dataHoraCheck, null);
-
             if (isLivre) {
                 System.out.println("✅ " + horarioAtual + " - Livre");
                 encontrouAlgumLivre = true;
             }
-
             horarioAtual = horarioAtual.plusMinutes(30);
         }
         if (!encontrouAlgumLivre) {
@@ -260,37 +271,105 @@ public class Agenda {
         System.out.println("======================================");
     }
     public void gerarRelatorioFinanceiro() {
-        if (agendamentos.isEmpty()) {
-            System.out.println("📭 Nenhum dado para calcular.");
+        System.out.println("=== 💰 BALANÇO FINANCEIRO MENSAL ===");
+
+        Map<YearMonth, BigDecimal> entradas = new TreeMap<>();
+        Map<YearMonth, BigDecimal> saidas = new TreeMap<>();
+        Map<YearMonth, Boolean> mesesRegistrados = new TreeMap<>();
+
+        //  Somar Entradas
+        for (Agendamento a : agendamentos) {
+            YearMonth mes = YearMonth.from(a.getDataHora());
+            entradas.merge(mes, a.getServico().getValor(), BigDecimal::add);
+            mesesRegistrados.put(mes, true);
+        }
+
+        //  Somar Saídas (Gastos)
+        for (Gastos g : listaGastos) {
+            YearMonth mes = YearMonth.from(g.getData());
+            saidas.merge(mes, g.getValor(), BigDecimal::add);
+            mesesRegistrados.put(mes, true);
+        }
+        NumberFormat fmt = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        DateTimeFormatter fmtMes = DateTimeFormatter.ofPattern("MMMM/yyyy", new Locale("pt", "BR"));
+
+        for (YearMonth mes : mesesRegistrados.keySet()) {
+            BigDecimal totalEntrada = entradas.getOrDefault(mes, BigDecimal.ZERO);
+            BigDecimal totalSaida = saidas.getOrDefault(mes, BigDecimal.ZERO);
+            BigDecimal lucro = totalEntrada.subtract(totalSaida);
+
+            System.out.println("📅 " + mes.format(fmtMes).toUpperCase());
+            System.out.println("   🟢 Entradas: " + fmt.format(totalEntrada));
+            System.out.println("   🔴 Saídas:   " + fmt.format(totalSaida));
+
+            if (lucro.compareTo(BigDecimal.ZERO) >= 0) {
+                System.out.println("   🏆 LUCRO:    " + fmt.format(lucro));
+            } else {
+                System.out.println("   ⚠️ PREJUÍZO: " + fmt.format(lucro));
+            }
+            System.out.println("--------------------------------------");
+        }
+    }
+    public void adicionarGasto(String descricao, BigDecimal valor, LocalDate data) {
+        Gastos g = new Gastos(descricao, valor, data);
+        listaGastos.add(g);
+        System.out.println("💸 Gasto registrado: " + descricao);
+        salvarGastos();
+    }
+    private void salvarGastos() {
+        Path caminho = Path.of("gastos.txt");
+        List<String> linhas = new ArrayList<>();
+        for (Gastos g : listaGastos) {
+            linhas.add(g.getDescricao() + ";" + g.getValor() + ";" + g.getData());
+        }
+        try {
+            Files.write(caminho, linhas);
+        } catch (IOException e) {
+            System.err.println("Erro ao salvar gastos: " + e.getMessage());
+        }
+    }
+    private void carregarGastos() {
+        Path caminho = Path.of("gastos.txt");
+        if (!Files.exists(caminho)) return;
+
+        try {
+            List<String> linhas = Files.readAllLines(caminho);
+            listaGastos.clear();
+            for (String linha : linhas) {
+                if (linha.trim().isEmpty()) continue;
+
+                String[] partes = linha.split(";");
+                if (partes.length >= 3) {
+                    String desc = partes[0];
+                    BigDecimal valor = new BigDecimal(partes[1]);
+                    LocalDate data = LocalDate.parse(partes[2]);
+                    listaGastos.add(new Gastos(desc, valor, data));
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("❌ Erro ao ler arquivo de gastos: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("❌ Arquivo de gastos corrompido. Verifique o formato.");
+        }
+    }
+
+    public void listarDespesasDetalhadas() {
+        if (listaGastos.isEmpty()) {
+            System.out.println("📭 Nenhuma despesa registrada até o momento.");
             return;
         }
 
-        Map<YearMonth, BigDecimal> faturamento = new TreeMap<>();
-
-        for (Agendamento a : agendamentos) {
-            YearMonth mesAno = YearMonth.from(a.getDataHora());
-            BigDecimal valorServico = a.getServico().getValor();
-            faturamento.merge(mesAno, valorServico, BigDecimal::add);
-        }
-
-        System.out.println("=== 💰 RELATÓRIO FINANCEIRO MENSAL ===");
+        System.out.println("=== 💸 HISTÓRICO DE DESPESAS ===");
 
         NumberFormat fmtDinheiro = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-        DateTimeFormatter fmtMes = DateTimeFormatter.ofPattern("MMMM/yyyy", new Locale("pt", "BR"));
+        DateTimeFormatter fmtData = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        BigDecimal totalGeral = BigDecimal.ZERO;
-
-        for (Map.Entry<YearMonth, BigDecimal> entrada : faturamento.entrySet()) {
-            YearMonth mes = entrada.getKey();
-            BigDecimal totalMes = entrada.getValue();
-
-            System.out.println("📅 " + mes.format(fmtMes).toUpperCase() +
-                    ": " + fmtDinheiro.format(totalMes));
-
-            totalGeral = totalGeral.add(totalMes);
+        for (Gastos g : listaGastos) {
+            System.out.println("📅 " + g.getData().format(fmtData) +
+                    " | " + g.getDescricao().toUpperCase() +
+                    " | 🔻 " + fmtDinheiro.format(g.getValor()));
         }
-        System.out.println("--------------------------------------");
-        System.out.println("🏆 TOTAL ARRECADADO ATÉ AGORA : " + fmtDinheiro.format(totalGeral));
-        System.out.println("======================================");
+        System.out.println("================================");
     }
+
 }

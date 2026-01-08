@@ -22,7 +22,7 @@ public class Agendamento {
     }
 
     public Agendamento(UUID id, Cliente cliente, Profissional profissional, Servico servico, LocalDateTime dataHora) {
-        this.id = id; // Usa o ID que veio do arquivo
+        this.id = id;
         this.cliente = cliente;
         this.profissional = profissional;
         this.servico = servico;
@@ -30,38 +30,46 @@ public class Agendamento {
     }
 
     public UUID getId() {
+
         return id;
     }
 
     public Cliente getCliente() {
+
         return cliente;
     }
 
     public void setCliente(Cliente cliente) {
+
         this.cliente = cliente;
     }
 
     public Profissional getProfissional() {
+
         return profissional;
     }
 
     public void setProfissional(Profissional profissional) {
+
         this.profissional = profissional;
     }
 
-    public Servico getServico() {
+    public Servico getServico()
+    {
         return servico;
     }
 
     public void setServico(Servico servico) {
+
         this.servico = servico;
     }
-
     public LocalDateTime getDataHora() {
+
         return dataHora;
     }
 
     public void setDataHora(LocalDateTime dataHora) {
+
         this.dataHora = dataHora;
     }
 
