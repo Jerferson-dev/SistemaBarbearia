@@ -66,11 +66,16 @@ A aplicação foi implantada no ambiente Android utilizando o **Termux** (Emulad
 Caso queira testar no celular:
 
 1. Instale o app [Termux](https://f-droid.org/packages/com.termux/).
-2. Atualize os pacotes e instale o Java:
+2. Atualize os pacotes e instale o Java (confirme com 'y' se pedir):
    ```bash
    pkg update && pkg upgrade
+   ```
+   ```bash
    pkg install openjdk-21
+   ```
+   ```bash
    pkg install git
+   ```
    
 3. Clone e execute.
    ```bash
