@@ -100,7 +100,7 @@ Caso queira testar no celular:
 - Ter o **Java (JDK 21 ou superior)** instalado.
 
 ### Passo a passo
-1. Clone este repositório:
+1. Execute o Prompt de Comando (CMD) e clone este repositório:
    ```bash
    git clone https://github.com/Jerferson-dev/SistemaBarbearia.git
    
