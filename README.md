@@ -85,6 +85,9 @@ Caso queira testar no celular:
    ```bash
    cd SistemaBarbearia
    ```
+    ```bash
+   javac *.java
+   ```
    ```bash
    java Main.java
    ```
